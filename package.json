@@ -1,0 +1,21 @@
+{
+  "name": "bad-bank-react",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "firebase": "^9.9.0",
+    "firebase-admin": "^11.0.0",
+    "firebase-tools": "^11.2.2",
+    "lowdb": "^3.0.0",
+    "mongodb": "^4.7.0"
+  }
+}
