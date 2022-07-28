@@ -11,82 +11,128 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-function callOpenRoute(){
-  firebase.auth().currentUser.getIdToken()
-      .then(idToken => {
-        console.log('idToken', idToken);
-
-        (async () => {
-          let response = await fetch('/auth', {
-            method: "GET",
-            headers: {
-              'Authorization': idToken
-            }
-          });
-          let text = await response.text();
-          console.log('response', response);
-          routeMsg.innerHTML = text;
-        })();
-      }).catch(e => console.log('e', e));
-}
 
 function Login(){
-    const [show, setShow]    = React.useState(true);
-    const [status, setStatus]= React.useState('');
-    const [user, setUser]    = React.useState('');
-    const ctx = React.useContext(UserContext);
-   
-    return(
-        <Card
-           bgcolor="dark"
-           header="Login"
-           status={status}
-           body={show ? 
-           <LoginForm setShow={setShow} setStatus={setStatus} setUser={setUser} /> :
-           <LoginMsg setShow={setShow} setStatus={setStatus} user={user} />}
-        />
-    )
+  const [show, setShow]    = React.useState(true);
+  const [status, setStatus]= React.useState('');
+  const [user, setUser]    = React.useState(' ');
+  const UserContext = React.createContext('');
+  const ctx = React.useContext(UserContext);
+
+ 
+  return(
+      <Card
+         bgcolor="dark"
+         header="Login"
+         status={status}
+         body={show ? 
+         <LoginForm setShow={setShow} setStatus={setStatus} setUser={setUser} /> :
+         <LoginMsg setShow={setShow} setStatus={setStatus} user={user}/>}
+      />
+  )
 }
 
 function LoginMsg(props){
-    const auth = firebase.auth();
-    return(
-    <div>
-      <h5>{`Successful login `} </h5>
-      <br></br>
-      <button 
-        type="submit"
-        className="btn btn-light"
-        onClick={() => props.setShow(true)}>Log out</button>    
-    </div>);
-}
+  const bankUser = props.user.email;
+     return(
+     <div>
+         <h5>{` Successful login for:  ${bankUser} `}</h5>
+         <br></br>
+         <button  type='submit' className='btn btn-light'  onClick={logout} >Log out</button>
+         <br></br>
+         <br></br>
+         <button type="submit" className="btn btn-light" onClick={() => props.setShow(true)}>Log into another account </button>
+     </div>);
+ }
+
+ function logout() {
+  firebase
+  .auth()
+  .signOut()
+  .then(() => {
+   console.log('Sign-out successful.');
+   window.alert('You have been logged out');
+  })
+  .catch((error) => {
+    console.log('An error happened');
+  });
+ }
 
 function LoginForm(props) {
-    const [email, setEmail]       = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const ctx = React.useContext(UserContext);
+  const [email, setEmail]       = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [name, setName]         = React.useState('');
+  const [show, setShow]         = React.useState(true);
+  const [status, setStatus]     = React.useState(true);
+  const ctx = React.useContext(UserContext);
+  const user = ctx.user;
 
-// Push new user into the ctx
 function handle(){
-  const auth = firebase.auth();
-  fetch(`/account/login/${email}/${password}`)
-  .then(response => response.text())
-  .then((text) => {
-      try {
-          const data = JSON.parse(text);
-          props.setStatus('');
-          ctx.users.push({email,password,balance:100})
+  console.log(email, password);
+  firebase
+  .auth()
+  .signInWithEmailAndPassword(email, password)
+  .then((userMade) => {
+          const user = userMade.user;
+          console.log(`user: ${user.email}`);
           props.setShow(false);
-          console.log('JSON:', data);   
-      } catch(err) {
-          props.setStatus(email)
-          console.log('err:', email);
-      }
-  });
-}
+          props.setUser(user);
+          props.setStatus('');
+          ctx.user = user;
+      })
+      .catch((err) => {
+        const errCode = err.code;
+        const errMsg = err.message;
+        console.log(`err:  ${errMsg}`);
+      });
+    }
+
+    function google() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/cloud-platform');
+
+        firebase
+        .auth()
+        .signInWithPopup(provider)
+        .then((result) => {
+            const user = result.user;
+            console.log(`You are logged in using the following email: ${result.user.email}`);
+            props.setShow(false);
+            props.setStatus(true);
+            props.setUser(user);
+          
+        fetch(`/account/login/${user.email}/${user.password}`)
+            .then((response) => response.text())
+            .then((text) => {
+          try {
+               const data = JSON.parse(text);
+               props.setStatus('');
+               ctx.user.push({email,password,balance:100})
+               props.setShow(false);
+          } catch (err) {
+            const use = firebase.auth().bankUser;
+            const bbUser = user.bbUser;
+            const bbEmail = user.bbEmail;
+            const bbkPassword = user.bbPassword;
+            const url = `/account/create/${user.bbUser}/${user.bbEmail}/${user.bbPassword}`;
+            (async () => {
+              var res = await fetch(url);
+              var data = await res.json();
+              console.log(data);
+            })();
+          }
+        });
+      })
+      .catch((err) => {
+      console.log(err.message);
+      props.setStatus('Issues');
+      }); 
+     }   
+ 
+
 
 return(
-<div>
+<>
 Email Address<br/>
 <input 
   type='input'
@@ -104,9 +150,16 @@ Password<br/>
   onChange={e=> setPassword(e.currentTarget.value)}/><br/>
 
 <button
- type='submit'
+   type='submit'
    className='btn btn-light'
-   onClick={handle}>Log in
-  </button> 
-</div>);
+   onClick={handle}>Login
+</button> 
+<br></br>
+<br></br>
+<button
+   type='submit'
+   className='btn btn-light'
+   onClick={google}>Google Login
+</button> 
+</>);
  }
