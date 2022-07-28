@@ -1,4 +1,4 @@
-function NavBar(){
+function NavBar(props){
     return(
 <nav className="navbar navbar-expand-lg bg-dark">
     <a className="navbar-brand" href="#">BadBank</a>
@@ -27,6 +27,7 @@ function NavBar(){
         </li>
        </ul>
     </div>
+    {props.user && props.user.email}
   </nav>
  );
 }
