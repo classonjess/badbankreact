@@ -1,50 +1,63 @@
-function Balance(){
+function Balance(props){
   const [show, setShow]     = React.useState(true);
   const [status, setStatus] = React.useState('');  
+  const [user, setUser]     = React.useState('');
+  const [balance, setBalance] = React.useState('');
 
   return (
     <Card
-      bgcolor="dark"
-      header="Balance"
+      bgcolor='dark'
+      header='Balance'
       status={status}
-      body={show ?
-        <BalanceForm setShow={setShow} setStatus={setStatus}/> :
-        <BalanceMsg setShow={setShow} setStatus={setStatus}/>}
+      body={
+        show ? (
+          <>
+            <BalanceForm
+              user={props.user}
+              setShow={setShow}
+              setStatus={setStatus}
+              setBalance={setBalance}
+            />
+          </>
+        ) : (
+          <>
+            {' '}
+            <BalanceMsg setShow={setShow} setStatus={setStatus} />
+            <p>Current Bank account balance is ${balance}</p>
+          </>
+        )
+      }
     />
   )
-
 }
 
-function BalanceMsg(props){
-  return(<>
-    <h5>Success</h5>
-    <button type="submit" 
-      className="btn btn-light" 
-      onClick={() => {
-        props.setShow(true);
-      }}>
-        Check balance again
-    </button>
-  </>);
+function BalanceMsg(props) {
+  return (
+    <>
+
+    </>
+  )
 }
 
 function BalanceForm(props){
   const [email, setEmail]   = React.useState('');
-  const [amount, setAmount] = React.useState('');  
+  const [balance, setBalance] = React.useState(0);  
   const ctx = React.useContext(UserContext);
+  const user = ctx.user;
   
-  function handle(){
-    fetch(`/account/balance/${email}/${amount}`)
+    function handle(){
+    console.log(email,balance);
+    fetch(`/account/findOne/${email}`)
     .then(response => response.text())
     .then(text => {
         try {
-            const data = JSON.parse(amount);
-            props.setStatus(text);
-            props.setShow(false);
-            setAmount(user.amount);
-            console.log('JSON:', data);
+          const data = JSON.parse(text)
+          props.setStatus('')
+          props.setShow(false)
+          props.setBalance(data.balance)
+          console.log('JSON:', data)
         } catch(err) {
-            props.setStatus(text)
+          props.setStatus(text)
             console.log('err:', text);
         }
     });
@@ -52,7 +65,7 @@ function BalanceForm(props){
 
   return (<>
 
-    Email<br/>
+    Email Address:<br/>
     <input type="input" 
       className="form-control" 
       placeholder="Enter email" 
@@ -66,4 +79,4 @@ function BalanceForm(props){
     </button>
 
   </>);
-}
+  }
