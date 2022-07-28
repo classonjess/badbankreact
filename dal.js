@@ -24,9 +24,19 @@ function create(name, email, password,) {
     });
 }
 
+function login(email, password) {
+    return new Promise((resolve, reject) => {
+        const collection = db.collection('users');
+        const doc = {email, password, balance: 0};
+        collection.insertOne(doc, {w:1}, function(err, result){
+            err ? reject(err) : resolve(doc);
+        });
+    });
+}
+
 function find(email) {
     return new Promise((resolve, reject) => {
-        const customers = db
+        const collection = db
             .collection('users')
             .find({ email: email })
             .toArray(function (err, docs) {
@@ -62,55 +72,6 @@ function update(email, amount) {
     });
 }
 
-function deposit(email, amount) {
-    const newBalance = user.balance + Number(amount);
-    console.log('newBalance' + amount);
-    return new Promise((resolve, reject) => {
-        const customers = db
-            .collection('users')
-            .findOneAndUpdate(
-                { email: email },
-                { $inc: { balance: newBalance } },
-                { returnOriginal: false },
-                function (err, documents) {
-                    err ? reject(err) : resolve(documents);
-                }
-            );
-    });
-}
-
-function withdraw(email, amount) {
-    const newBalance = user.balance - Number(amount);
-    console.log('newBalance' + amount);
-    return new Promise((resolve, reject) => {
-        const customers = db
-            .collection('users')
-            .findOneAndUpdate(
-                { email: email },
-                { $inc: { balance: newBalance } },
-                { returnOriginal: false },
-                function (err, documents) {
-                    err ? reject(err) : resolve(documents);
-                }
-            );
-    });
-}
-
-
-function bal(email, amount) {
-    return new Promise((resolve, reject) => {
-        const customers = db
-            .collection('users')
-            .findOneAndUpdate(
-                { email: email },
-                { $inc: { balance: amount } },
-                { returnOriginal: false },
-                function (err, documents) {
-                    err ? reject(err) : resolve(documents);
-                }
-            );
-    });
-}
 
 // All users in the collection
 function all(){
@@ -124,4 +85,4 @@ function all(){
     })
 }
 
-module.exports = {create, all, update, findOne, find, bal, deposit, withdraw};
+module.exports = {create, all, update, findOne, find, login};
