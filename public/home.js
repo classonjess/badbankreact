@@ -1,6 +1,7 @@
 function Home(){
     const [show, setShow]    =React.useState(true);
     const [status, setStatus]=React.useState('');
+    const [user, setUser]    = React.useState(' ');
     
     return(
         <Card
@@ -8,16 +9,17 @@ function Home(){
            header="Welcome to Bad Bank"
            status={status}
            body={show ? 
-           <HomeForm setShow={setShow}/> :
-           <HomeMsg setShow={setShow}/>}
+           <HomeForm setShow={setShow} setStatus={setStatus} setUser={setUser}/> :
+           <HomeMsg setShow={setShow} setStatus={setStatus} user={user}/>}
         />
     )
     }
     
     function HomeMsg(props){
+    const bankUser = props.user.email;
     return(
     <div>
-      <h5>Success</h5>
+      <h5>{`Account successfully created for: ${bankUser}`}</h5>
       <button type="submit"
         className="btn btn-light"
         onClick={() => props.setShow(true)}>Add Another Account</button>    
@@ -32,10 +34,31 @@ function Home(){
     
     // Push new user into the ctx
     function handle() {
-    console.log(name,email,password);
-    ctx.users.push({name,email,password});
-    props.setShow(false);
-    }
+      console.log(email,password);
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(email, password)
+        .then((userMade) => {
+          const user = userMade.user;
+          console.log(`User has been created: ${user.email}`);
+          props.setUser(user);
+          props.setShow(false);
+          props.setStatus('');
+        })
+        .catch((err) => {
+          const errMsg = err.message;
+          console.log(`err:  ${errMsg}`);
+        });
+        const url = `/account/create/${name}/${email}/${password}`;
+        (async () => {
+            var res  = await fetch(url);
+            var data = await res.json();    
+            console.log(data);        
+        })();
+        ctx.user = { name: name, email: email };
+        props.setShow(false);
+      }   
+      
     
     return(
       <div>
